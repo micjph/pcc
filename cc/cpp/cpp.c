@@ -1,4 +1,4 @@
-/*	$Id: cpp.c,v 1.195 2014/08/18 18:46:05 ragge Exp $	*/
+/*	$Id: cpp.c,v 1.195.2.1 2014/12/06 10:10:34 ragge Exp $	*/
 
 /*
  * Copyright (c) 2004,2010 Anders Magnusson (ragge@ludd.luth.se).
@@ -1712,7 +1712,7 @@ void
 subarg(struct symtab *nl, const usch **args, int lvl)
 {
 	int narg, instr, snuff;
-	const usch *sp, *bp, *ap, *vp;
+	const usch *sp, *bp, *ap, *vp, *tp;
 
 	DPRINT(("%d:subarg '%s'\n", lvl, nl->namep));
 	vp = nl->value;
@@ -1774,26 +1774,27 @@ subarg(struct symtab *nl, const usch **args, int lvl)
 				exparg(lvl+1);
 				delwarn();
 			} else {
-			while (*bp)
-				bp++;
-			while (bp > ap) {
-				bp--;
-				if (snuff && !instr && iswsnl(*bp)) {
-					while (iswsnl(*bp))
-						bp--;
-					cunput(' ');
-				}
+				while (*bp)
+					bp++;
+				while (bp > ap) {
+					bp--;
+					if (snuff && !instr && iswsnl(*bp)) {
+						while (iswsnl(*bp))
+							bp--;
+						cunput(' ');
+					}
 
-				cunput(*bp);
-				if ((*bp == '\'' || *bp == '"')
-				     && bp[-1] != '\\' && snuff) {
-					instr ^= 1;
-					if (instr == 0 && *bp == '"')
+					cunput(*bp);
+					if (snuff && (*bp == '\'' || *bp == '"')) {
+						instr ^= 1;
+						for (tp = bp - 1; *tp == '\\'; tp--)
+							instr ^= 1;
+						if (*bp == '"')
+							cunput('\\');
+					}
+					if (snuff && instr && *bp == '\\')
 						cunput('\\');
 				}
-				if (instr && (*bp == '\\' || *bp == '"'))
-					cunput('\\');
-			}
 			}
 		} else
 			cunput(*sp);
