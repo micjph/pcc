@@ -1,4 +1,4 @@
-/*	$Id: cc.c,v 1.283 2014/10/11 10:50:26 ragge Exp $	*/
+/*	$Id: cc.c,v 1.283.2.1 2014/12/06 09:52:55 ragge Exp $	*/
 
 /*-
  * Copyright (c) 2011 Joerg Sonnenberger <joerg@NetBSD.org>.
@@ -188,6 +188,10 @@ char	*sysroot = "", *isysroot;
 #ifndef STDINC
 #define	STDINC	  	"/usr/include/"
 #endif
+#ifdef MULTIARCH_PATH
+#define STDINC_MA	STDINC MULTIARCH_PATH "/"
+#endif
+
 
 char *cppadd[] = CPPADD;
 char *cppmdadd[] = CPPMDADD;
@@ -202,7 +206,11 @@ char *cppmdadd[] = CPPMDADD;
 #define PCCLIBDIR	NULL
 #endif
 #ifndef DEFLIBDIRS	/* default library search paths */
+#ifdef MULTIARCH_PATH
 #define DEFLIBDIRS	{ "/usr/lib/", 0 }
+#else
+#define DEFLIBDIRS	{ "/usr/lib/", "/usr/lib/" MULTIARCH_PATH "/", 0 }
+#endif
 #endif
 #ifndef DEFLIBS		/* default libraries included */
 #define	DEFLIBS		{ "-lpcc", "-lc", "-lpcc", 0 }
@@ -1672,6 +1680,9 @@ setup_cpp_flags(void)
 
 	/* Include dirs */
 	strlist_append(&sysincdirs, "=" INCLUDEDIR "pcc/");
+#ifdef STDINC_MA
+	strlist_append(&sysincdirs, "=" STDINC_MA);
+#endif
 	strlist_append(&sysincdirs, "=" STDINC);
 #ifdef PCCINCDIR
 	if (cxxflag)
